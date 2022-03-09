@@ -1,7 +1,7 @@
 # [Exercise Tracker](https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/exercise-tracker)
 
 |Tests|
-|:--|
+|:--:|
 ||
 You should provide your own project, not the example URL.`
 ||
