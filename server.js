@@ -31,13 +31,13 @@ app.get('/', (req, res) => {
 //user's post api
 app.post('/api/users',(req,res)=>{
   const username = req.body.username;
-  console.log(`username`)
+ 
   user.findOneAndUpdate({username: username},{username:username},{upsert:true, new:true},(err, doc)=>{
     if(err){
       res.json({"error":err});
     }
     else{
-      console.log(doc.username);
+      
       res.json({"username": doc.username, "_id": doc._id});
     }
   })
@@ -60,7 +60,7 @@ app.get('/api/users',(req,res)=>{
   })
 })
 
-//@TODO
+
 //POST /api/users/:_id/exercises
 app.post('/api/users/:_id/exercises', (req,res)=>{
   const id = req.params._id;
@@ -70,27 +70,62 @@ app.post('/api/users/:_id/exercises', (req,res)=>{
   const update = {
     $inc:{count:1},
     $push:{
-      logs:{
+      log:{
         description, duration, date
       }}
   }
   user.findOneAndUpdate({_id:id}, update, {new: true},  (err,user)=>{
     if(err){ res.json({"error":err})}
     else {
-      
-        res.json(user);
+         console.log(typeof user.log[0].date);
+        res.json({"username":user.username, "description":user.log[user.log.length-1].description, "duration":user.log[user.log.length-1].duration, "date": new String(user.log[user.log.length-1].date), "_id":user._id});
       };
     }
     
   )
 })
 
-//@TODO
-//GET /api/users/:_id/exercises
 
+//GET /api/users/:_id/logs?[from][to][limit]
+app.get('/api/users/:_id/logs', (req,res)=>{
+  //get id para
+  const _id = req.params._id;
+  // get query strings
+ const {from , to, limit} = req.query;
+  console.log(from, to, limit);
 
-////@TODO
-//GET /api/users/:_id/logs
+   user.findOne({_id}, (err, docs)=>{
+     if(from && to){
+       // filter by the given date's range, toDateString() return same value when parsing 'Wed Jan 03 1990' and '1990-01-03'
+      let exercises = docs.log.filter((elem, i)=>(
+        Date.parse(elem.date)>=Date.parse(new Date(from).toDateString()) && Date.parse(elem.date)<=Date.parse(new Date(to).toDateString())
+      ))
+       console.log(`from to ${exercises}`)
+  // filter by the given limit
+       if(limit){
+         exercises = exercises.filter((elem,i)=>(
+           i<Number(limit)
+         ))
+       }
+       res.json({'_id': docs._id, 'userName': docs.userName, 'conunt': docs.count, 'log':exercises});
+     } else {
+       // if from and to dates are not given check if the limit have
+       if(limit){
+         // if the limit was given then filter by the given limit
+           const exercises = docs.log.filter((elem,i)=>(
+           i<Number(limit)
+         ))
+         res.json({'_id': docs._id, 'userName': docs.userName, 'conunt': docs.count, 'log':exercises});
+       } else{
+         //if the limit was not given then return all data with the orginal format
+      res.json(docs);
+     }}
+    })
+ 
+   
+  
+  })
+
 
 
 
